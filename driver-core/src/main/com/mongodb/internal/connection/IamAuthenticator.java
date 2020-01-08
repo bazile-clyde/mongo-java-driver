@@ -255,12 +255,12 @@ public class IamAuthenticator extends SaslAuthenticator {
                 conn.setRequestMethod("GET");
                 conn.setReadTimeout(10000);
 
-                try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), Charset.forName("UTF-8")))) {
-                    int status = conn.getResponseCode();
-                    if (status != HttpURLConnection.HTTP_OK) {
-                        throw new IOException(String.format("%d %s", status, conn.getResponseMessage()));
-                    }
+                int status = conn.getResponseCode();
+                if (status != HttpURLConnection.HTTP_OK) {
+                    throw new IOException(String.format("%d %s", status, conn.getResponseMessage()));
+                }
 
+                try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), Charset.forName("UTF-8")))) {
                     String inputLine;
                     while ((inputLine = in.readLine()) != null) {
                         content.append(inputLine);

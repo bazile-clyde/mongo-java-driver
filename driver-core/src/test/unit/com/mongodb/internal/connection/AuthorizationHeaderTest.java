@@ -96,10 +96,6 @@ public class AuthorizationHeaderTest {
 
     @Test
     public void testCreateCanonicalRequest() throws SaslException {
-        Map<String, String> parameters = new HashMap<>();
-        parameters.put("ListUsers", null);
-        parameters.put("Version", "2010-05-08");
-
         Map<String, String> requestHeaders = new HashMap<>();
         requestHeaders.put("Content-Type", "application/x-www-form-urlencoded; charset=utf-8");
         requestHeaders.put("Host", "iam.amazonaws.com");

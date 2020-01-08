@@ -18,6 +18,7 @@ package com.mongodb.internal.connection;
 
 import com.mongodb.AuthenticationMechanism;
 import com.mongodb.MongoCredential;
+import com.mongodb.MongoException;
 import com.mongodb.MongoInternalException;
 import com.mongodb.ServerAddress;
 import com.mongodb.lang.NonNull;
@@ -27,7 +28,6 @@ import org.bson.BsonBinaryWriter;
 import org.bson.BsonDocument;
 import org.bson.BsonInt32;
 import org.bson.BsonString;
-import org.bson.ByteBuf;
 import org.bson.RawBsonDocument;
 import org.bson.codecs.BsonDocumentCodec;
 import org.bson.codecs.EncoderContext;
@@ -47,22 +47,24 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 
+import static com.mongodb.AuthenticationMechanism.MONGODB_IAM;
 import static java.lang.String.format;
 
 public class IamAuthenticator extends SaslAuthenticator {
+    private static final String MONGODB_IAM_MECHANISM_NAME = "MONGODB-IAM";
     private static final int RANDOM_LENGTH = 32;
 
     public IamAuthenticator(final MongoCredentialWithCache credential) {
         super(credential);
+
+        if (getMongoCredential().getAuthenticationMechanism() != MONGODB_IAM) {
+            throw new MongoException("Incorrect mechanism: " + getMongoCredential().getMechanism());
+        }
     }
 
     @Override
     public String getMechanismName() {
-        AuthenticationMechanism authMechanism = getMongoCredential().getAuthenticationMechanism();
-        if (authMechanism == null) {
-            throw new IllegalArgumentException("Authentication mechanism cannot be null");
-        }
-        return authMechanism.getMechanismName();
+        return MONGODB_IAM_MECHANISM_NAME;
     }
 
     @Override
@@ -146,8 +148,10 @@ public class IamAuthenticator extends SaslAuthenticator {
             final String host = document.getString("h").getValue();
 
             final byte[] serverNonce = document.getBinary("s").getData();
-            if (serverNonce.length != (2 * RANDOM_LENGTH) || !Arrays.equals(Arrays.copyOf(serverNonce, RANDOM_LENGTH), this.clientNonce)) {
-                throw new SaslException("Invalid server nonce");
+            if (serverNonce.length != (2 * RANDOM_LENGTH)) {
+                throw new SaslException(String.format("Server nonce must be %d bytes", 2 * RANDOM_LENGTH));
+            } else if (!Arrays.equals(Arrays.copyOf(serverNonce, RANDOM_LENGTH), this.clientNonce)) {
+                throw new SaslException(String.format("The first %d bytes of the server nonce must be the client nonce", RANDOM_LENGTH));
             }
 
             String timestamp = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'")
@@ -180,11 +184,7 @@ public class IamAuthenticator extends SaslAuthenticator {
             BasicOutputBuffer buffer = new BasicOutputBuffer();
             new BsonDocumentCodec().encode(new BsonBinaryWriter(buffer), document, EncoderContext.builder().build());
             bytes = new byte[buffer.size()];
-            int curPos = 0;
-            for (ByteBuf cur : buffer.getByteBuffers()) {
-                System.arraycopy(cur.array(), cur.position(), bytes, curPos, cur.limit());
-                curPos += cur.position();
-            }
+            System.arraycopy(buffer.getInternalBuffer(), 0, bytes, 0, buffer.getSize());
             return bytes;
         }
 
@@ -237,10 +237,9 @@ public class IamAuthenticator extends SaslAuthenticator {
                 final String ecs = "http://169.254.170.2";
 
                 String path = System.getenv("AWS_CONTAINER_CREDENTIALS_RELATIVE_URI");
-                String uri = ecs + path;
-                if (path == null) {
-                    uri = ec2 + /* role name */ getHttpContents(ec2);
-                }
+                String uri = (path == null)
+                        ? ec2 + getHttpContents(ec2) /* role name */
+                        : ecs + path;
 
                 httpResponse = getHttpContents(uri);
             }
@@ -254,13 +253,19 @@ public class IamAuthenticator extends SaslAuthenticator {
             try {
                 conn = (HttpURLConnection) new URL(endpoint).openConnection();
                 conn.setRequestMethod("GET");
+                conn.setReadTimeout(10000);
 
-                BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), Charset.forName("UTF-8")));
-                String inputLine;
-                while ((inputLine = in.readLine()) != null) {
-                    content.append(inputLine);
+                try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), Charset.forName("UTF-8")))) {
+                    int status = conn.getResponseCode();
+                    if (status != HttpURLConnection.HTTP_OK) {
+                        throw new IOException(String.format("%d %s", status, conn.getResponseMessage()));
+                    }
+
+                    String inputLine;
+                    while ((inputLine = in.readLine()) != null) {
+                        content.append(inputLine);
+                    }
                 }
-                in.close();
             } catch (IOException e) {
                 throw new MongoInternalException("Unexpected IOException", e);
             } finally {

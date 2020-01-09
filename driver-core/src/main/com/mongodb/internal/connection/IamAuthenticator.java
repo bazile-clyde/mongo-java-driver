@@ -46,6 +46,8 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.mongodb.AuthenticationMechanism.MONGODB_IAM;
 import static java.lang.String.format;
@@ -135,7 +137,7 @@ public class IamAuthenticator extends SaslAuthenticator {
         }
 
         private byte[] computeClientFirstMessage() throws SaslException {
-            new SecureRandom(this.clientNonce).nextBytes(this.clientNonce);
+            new SecureRandom().nextBytes(this.clientNonce);
 
             BsonDocument document = new BsonDocument()
                     .append("r", new BsonBinary(this.clientNonce))
@@ -232,28 +234,44 @@ public class IamAuthenticator extends SaslAuthenticator {
 
         @NonNull
         private String getHttpResponse() {
-            if (httpResponse == null) {
-                final String ec2 = "http://169.254.169.254/latest/meta-data/iam/security-credentials/";
-                final String ecs = "http://169.254.170.2";
-
-                String path = System.getenv("AWS_CONTAINER_CREDENTIALS_RELATIVE_URI");
-                String uri = (path == null)
-                        ? ec2 + getHttpContents(ec2) /* role name */
-                        : ecs + path;
-
-                httpResponse = getHttpContents(uri);
+            if (httpResponse != null) {
+                return httpResponse;
             }
+
+            String path = System.getenv("AWS_CONTAINER_CREDENTIALS_RELATIVE_URI");
+            httpResponse = (path == null)
+                    ?  getEc2Response()
+                    :  getHttpContents("GET", "http://169.254.170.2" + path, null);
             return httpResponse;
         }
 
+        private String getEc2Response() {
+            final String endpoint = "http://169.254.169.254";
+            final String path = "/latest/meta-data/iam/security-credentials/";
+
+            Map<String, String> header = new HashMap<>();
+            header.put("X-aws-ec2-metadata-token-ttl-seconds", "30");
+            String token = getHttpContents("PUT", endpoint + "/latest/api/token", header);
+
+            header.clear();
+            header.put("X-aws-ec2-metadata-token", token);
+            String role = getHttpContents("GET", endpoint + path, header);
+            return getHttpContents("GET", endpoint + path + role, header);
+        }
+
         @NonNull
-        private static String getHttpContents(final String endpoint) {
+        private static String getHttpContents(final String method, final String endpoint, final Map<String, String> headers) {
             StringBuffer content = new StringBuffer();
             HttpURLConnection conn = null;
             try {
                 conn = (HttpURLConnection) new URL(endpoint).openConnection();
-                conn.setRequestMethod("GET");
+                conn.setRequestMethod(method);
                 conn.setReadTimeout(10000);
+                if (headers != null) {
+                    for (Map.Entry<String, String> kvp : headers.entrySet()) {
+                       conn.setRequestProperty(kvp.getKey(), kvp.getValue());
+                    }
+                }
 
                 int status = conn.getResponseCode();
                 if (status != HttpURLConnection.HTTP_OK) {

@@ -101,7 +101,7 @@ public class AuthorizationHeaderTest {
         requestHeaders.put("Host", "iam.amazonaws.com");
         requestHeaders.put("X-Amz-Date", timestamp);
 
-        String actual = AuthorizationHeader.createCanonicalRequest("GET", "/", "Action=ListUsers&Version=2010-05-08", "", requestHeaders);
+        String actual = AuthorizationHeader.createCanonicalRequest("GET", "Action=ListUsers&Version=2010-05-08", "", requestHeaders);
         String expected = "GET\n"
                 + "/\n"
                 + "Action=ListUsers&Version=2010-05-08\n"
@@ -120,7 +120,7 @@ public class AuthorizationHeaderTest {
         requestHeaders.put("X-MongoDB-GS2-CB-Flag", "n");
         requestHeaders.put("X-Amz-Security-Token", token);
 
-        actual = AuthorizationHeader.createCanonicalRequest("GET", "/", "Action=ListUsers&Version=2010-05-08", "", requestHeaders);
+        actual = AuthorizationHeader.createCanonicalRequest("GET", "Action=ListUsers&Version=2010-05-08", "", requestHeaders);
         expected = "GET\n"
                 + "/\n"
                 + "Action=ListUsers&Version=2010-05-08\n"
@@ -137,7 +137,7 @@ public class AuthorizationHeaderTest {
     }
 
     @Test
-    public void testCreateStringToSign() throws SaslException {
+    public void testCreateStringToSign() {
         String date = timestamp.substring(0, "YYYYMMDD".length());
         String credentialScope = String.format("%s/us-east-1/iam/aws4_request", date);
         String hash = "f536975d06c0309214f805bb90ccff089219ecd68b2577efef23edd43b7e1a59";

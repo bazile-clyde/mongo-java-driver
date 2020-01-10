@@ -21,7 +21,6 @@ import org.bson.internal.Base64;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.security.sasl.SaslException;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -35,21 +34,16 @@ final class AuthorizationHeader {
     private static final String AWS4_HMAC_SHA256 = "AWS4-HMAC-SHA256";
     private static final String SERVICE = "sts";
 
-    private String host;
-    private String timestamp;
-    private String signature;
-    private String accessKeyID;
-    private String sessionToken;
-    private String secretKey;
-    private String authorizationHeader;
-    private byte[] nonce;
-    private Map<String, String> requestHeaders;
-    private String body;
-
+    private final String host;
+    private final String timestamp;
+    private final String signature;
+    private final String sessionToken;
+    private final String authorizationHeader;
+    private final byte[] nonce;
+    private final Map<String, String> requestHeaders;
+    private final String body;
 
     private AuthorizationHeader(final Builder builder) throws SaslException {
-        this.accessKeyID = builder.accessKeyID;
-        this.secretKey = builder.secretKey;
         this.sessionToken = builder.sessionToken;
         this.host = builder.host;
         this.timestamp = builder.timestamp;
@@ -57,34 +51,32 @@ final class AuthorizationHeader {
         this.body = "Action=GetCallerIdentity&Version=2011-06-15";
         this.requestHeaders = getRequestHeaders();
 
-        String canonicalRequest = createCanonicalRequest("POST", "/", "", body, requestHeaders);
+        String canonicalRequest = createCanonicalRequest("POST", "", body, requestHeaders);
         String toSign = createStringToSign(hash(canonicalRequest), getTimestamp(), getCredentialScope());
-        this.signature = calculateSignature(toSign, secretKey, getDate(), getRegion(host), SERVICE);
+        this.signature = calculateSignature(toSign, builder.secretKey, getDate(), getRegion(host), SERVICE);
 
-        this.authorizationHeader = String.format("%s Credential=%s/%s, SignedHeaders=%s, Signature=%s", AWS4_HMAC_SHA256, accessKeyID,
-                getCredentialScope(),
-                getSignedHeaders(this.requestHeaders), getSignature());
+        this.authorizationHeader = String.format("%s Credential=%s/%s, SignedHeaders=%s, Signature=%s", AWS4_HMAC_SHA256,
+                builder.accessKeyID, getCredentialScope(), getSignedHeaders(this.requestHeaders), getSignature());
     }
 
-    static String createCanonicalRequest(final String method, final String uri, final String query, final String body,
+    static String createCanonicalRequest(final String method, final String query, final String body,
                                          final Map<String, String> requestHeaders) throws SaslException {
         final String headers = getCanonicalHeaders(requestHeaders);
         final String signedHeaders = getSignedHeaders(requestHeaders);
 
-        final List<String> request = Arrays.asList(method, uri, query, headers, signedHeaders, hash(body));
-        return request.stream().collect(Collectors.joining("\n"));
+        final List<String> request = Arrays.asList(method, "/", query, headers, signedHeaders, hash(body));
+        return String.join("\n", request);
     }
 
-    static String createStringToSign(final String hash, final String timestamp, final String credentialScope) throws SaslException {
+    static String createStringToSign(final String hash, final String timestamp, final String credentialScope) {
         final List<String> toSign = Arrays.asList(AWS4_HMAC_SHA256, timestamp, credentialScope, hash);
-        return toSign.stream().collect(Collectors.joining("\n"));
+        return String.join("\n", toSign);
     }
 
     static String calculateSignature(final String toSign, final String secret, final String date, final String region,
                                      final String service) throws SaslException {
-        String kSecret = secret;
 
-        byte[] kDate = hmac(decodeUTF8("AWS4" + kSecret), decodeUTF8(date));
+        byte[] kDate = hmac(decodeUTF8("AWS4" + secret), decodeUTF8(date));
         byte[] kRegion = hmac(kDate, decodeUTF8(region));
         byte[] kService = hmac(kRegion, decodeUTF8(service));
         byte[] kSigning = hmac(kService, decodeUTF8("aws4_request"));
@@ -115,8 +107,7 @@ final class AuthorizationHeader {
     }
 
     static String getSignedHeaders(final Map<String, String> requestHeaders) {
-        return requestHeaders.entrySet().stream()
-                .map(kvp -> kvp.getKey())
+        return requestHeaders.keySet().stream()
                 .map(String::toLowerCase)
                 .sorted()
                 .collect(Collectors.joining(";"));
@@ -164,16 +155,12 @@ final class AuthorizationHeader {
     }
 
 
-    private static byte[] decodeUTF8(final String str) throws SaslException {
-        try {
-            return str.getBytes("UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new SaslException("UTF-8 is not a supported encoding.", e);
-        }
+    private static byte[] decodeUTF8(final String str) {
+        return str.getBytes(StandardCharsets.UTF_8);
     }
 
     private static byte[] hmac(final byte[] secret, final byte[] message) throws SaslException {
-        byte[] hmacSha256 = null;
+        byte[] hmacSha256;
         try {
             Mac mac = Mac.getInstance("HmacSHA256");
             SecretKeySpec spec = new SecretKeySpec(secret, "HmacSHA256");
@@ -186,7 +173,7 @@ final class AuthorizationHeader {
     }
 
     private static byte[] sha256(final String payload) throws SaslException {
-        MessageDigest md = null;
+        MessageDigest md;
         try {
             md = MessageDigest.getInstance("SHA-256");
         } catch (NoSuchAlgorithmException e) {

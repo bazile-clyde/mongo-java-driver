@@ -40,7 +40,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -76,8 +76,8 @@ public class IamAuthenticator extends SaslAuthenticator {
 
     private static class IamSaslClient implements SaslClient {
         private final MongoCredential credential;
+        private final byte[] clientNonce = new byte[RANDOM_LENGTH];
         private int step = -1;
-        private byte[] clientNonce = new byte[RANDOM_LENGTH];
         private String httpResponse;
 
         IamSaslClient(final MongoCredential credential) {
@@ -117,12 +117,12 @@ public class IamAuthenticator extends SaslAuthenticator {
         }
 
         @Override
-        public byte[] unwrap(final byte[] bytes, final int i, final int i1) throws SaslException {
+        public byte[] unwrap(final byte[] bytes, final int i, final int i1) {
             throw new UnsupportedOperationException("Not implemented yet!");
         }
 
         @Override
-        public byte[] wrap(final byte[] bytes, final int i, final int i1) throws SaslException {
+        public byte[] wrap(final byte[] bytes, final int i, final int i1) {
             throw new UnsupportedOperationException("Not implemented yet!");
         }
 
@@ -132,11 +132,11 @@ public class IamAuthenticator extends SaslAuthenticator {
         }
 
         @Override
-        public void dispose() throws SaslException {
+        public void dispose() {
             // nothing to do
         }
 
-        private byte[] computeClientFirstMessage() throws SaslException {
+        private byte[] computeClientFirstMessage() {
             new SecureRandom().nextBytes(this.clientNonce);
 
             BsonDocument document = new BsonDocument()
@@ -261,7 +261,7 @@ public class IamAuthenticator extends SaslAuthenticator {
 
         @NonNull
         private static String getHttpContents(final String method, final String endpoint, final Map<String, String> headers) {
-            StringBuffer content = new StringBuffer();
+            StringBuilder content = new StringBuilder();
             HttpURLConnection conn = null;
             try {
                 conn = (HttpURLConnection) new URL(endpoint).openConnection();
@@ -278,7 +278,7 @@ public class IamAuthenticator extends SaslAuthenticator {
                     throw new IOException(String.format("%d %s", status, conn.getResponseMessage()));
                 }
 
-                try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), Charset.forName("UTF-8")))) {
+                try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
                     String inputLine;
                     while ((inputLine = in.readLine()) != null) {
                         content.append(inputLine);

@@ -378,8 +378,8 @@
       "valid": false
     },
     {
-      "description": "should recognise the mechanism (MONGODB-IAM)",
-      "uri": "mongodb://localhost/?authMechanism=MONGODB-IAM",
+      "description": "should recognise the mechanism (MONGODB-AWS)",
+      "uri": "mongodb://localhost/?authMechanism=MONGODB-AWS",
       "hosts": null,
       "valid": true,
       "warning": false,
@@ -389,12 +389,12 @@
         "db": "$external"
       },
       "options": {
-        "authmechanism": "MONGODB-IAM"
+        "authmechanism": "MONGODB-AWS"
       }
     },
     {
-      "description": "should throw an exception if username and no password (MONGODB-IAM)",
-      "uri": "mongodb://user@localhost/?authMechanism=MONGODB-IAM",
+      "description": "should throw an exception if username and no password (MONGODB-AWS)",
+      "uri": "mongodb://user@localhost/?authMechanism=MONGODB-AWS",
       "hosts": null,
       "valid": false,
       "warning": false,
@@ -402,8 +402,8 @@
       "options": null
     },
     {
-      "description": "should use username and password if specified (MONGODB-IAM)",
-      "uri": "mongodb://user:password@localhost/?authMechanism=MONGODB-IAM",
+      "description": "should use username and password if specified (MONGODB-AWS)",
+      "uri": "mongodb://user:password@localhost/?authMechanism=MONGODB-AWS",
       "hosts": null,
       "valid": true,
       "warning": false,
@@ -413,12 +413,12 @@
         "db": "$external"
       },
       "options": {
-        "authmechanism": "MONGODB-IAM"
+        "authmechanism": "MONGODB-AWS"
       }
     },
     {
-      "description": "should use username, password and session token if specified (MONGODB-IAM)",
-      "uri": "mongodb://user:password@localhost/?authMechanism=MONGODB-IAM&authMechanismProperties=AWS_SESSIONS_TOKEN:token",
+      "description": "should use username, password and session token if specified (MONGODB-AWS)",
+      "uri": "mongodb://user:password@localhost/?authMechanism=MONGODB-AWS&authMechanismProperties=AWS_SESSIONS_TOKEN:token",
       "hosts": null,
       "valid": true,
       "warning": false,
@@ -428,7 +428,7 @@
         "db": "$external"
       },
       "options": {
-        "authmechanism": "MONGODB-IAM",
+        "authmechanism": "MONGODB-AWS",
         "authmechanismproperties": {
           "AWS_SESSION_TOKEN": "token"
         }

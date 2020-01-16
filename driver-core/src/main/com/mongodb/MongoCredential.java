@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.mongodb.AuthenticationMechanism.GSSAPI;
-import static com.mongodb.AuthenticationMechanism.MONGODB_IAM;
+import static com.mongodb.AuthenticationMechanism.MONGODB_AWS;
 import static com.mongodb.AuthenticationMechanism.MONGODB_X509;
 import static com.mongodb.AuthenticationMechanism.PLAIN;
 import static com.mongodb.AuthenticationMechanism.SCRAM_SHA_1;
@@ -270,15 +270,15 @@ public final class MongoCredential {
     }
 
     /**
-     * Creates a MongoCredential instance for the MONGODB-IAM mechanism.
+     * Creates a MongoCredential instance for the MONGODB-AWS mechanism.
      *
      * @param userName the user name
      * @param password the user password
      * @return the credential
      * @see #createCredential(String, String, char[])
      */
-    public static MongoCredential createIamCredential(final String userName, final char[] password) {
-        return new MongoCredential(MONGODB_IAM, userName, "$external", password);
+    public static MongoCredential createAwsCredential(final String userName, final char[] password) {
+        return new MongoCredential(MONGODB_AWS, userName, "$external", password);
     }
 
     /**
@@ -323,7 +323,7 @@ public final class MongoCredential {
 
     MongoCredential(@Nullable final AuthenticationMechanism mechanism, @Nullable final String userName, final String source,
                     @Nullable final char[] password, final Map<String, Object> mechanismProperties) {
-        if (mechanism != MONGODB_X509 && mechanism != MONGODB_IAM && userName == null) {
+        if (mechanism != MONGODB_X509 && mechanism != MONGODB_AWS && userName == null) {
             throw new IllegalArgumentException("username can not be null");
         }
 
@@ -339,7 +339,7 @@ public final class MongoCredential {
             throw new IllegalArgumentException("Password must be null for the " + mechanism + " mechanism");
         }
 
-        if (mechanism == MONGODB_IAM && userName != null && password == null) {
+        if (mechanism == MONGODB_AWS && userName != null && password == null) {
             throw new IllegalArgumentException("Password can not be null when username is provided for " + mechanism + " mechanism");
         }
 

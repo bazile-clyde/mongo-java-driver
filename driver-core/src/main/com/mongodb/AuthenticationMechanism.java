@@ -31,14 +31,19 @@ public enum AuthenticationMechanism {
     GSSAPI("GSSAPI"),
 
     /**
-     * The PLAIN mechanism.  See the <a href="http://www.ietf.org/rfc/rfc4616.txt">RFC</a>.
+     * The MONGODB-AWS mechanism.
      */
-    PLAIN("PLAIN"),
+    MONGODB_AWS("MONGODB-AWS"),
 
     /**
      * The MongoDB X.509 mechanism. This mechanism is available only with client certificates over SSL.
      */
     MONGODB_X509("MONGODB-X509"),
+
+    /**
+     * The PLAIN mechanism.  See the <a href="http://www.ietf.org/rfc/rfc4616.txt">RFC</a>.
+     */
+    PLAIN("PLAIN"),
 
     /**
      * The SCRAM-SHA-1 mechanism.  See the <a href="http://tools.ietf.org/html/rfc5802">RFC</a>.
@@ -49,12 +54,7 @@ public enum AuthenticationMechanism {
      * The SCRAM-SHA-256 mechanism.  See the <a href="http://tools.ietf.org/html/rfc7677">RFC</a>.
      * @since 3.8
      */
-    SCRAM_SHA_256("SCRAM-SHA-256"),
-
-    /**
-     * The MONGODB-IAM mechanism.
-     */
-    MONGODB_IAM("MONGODB-IAM");
+    SCRAM_SHA_256("SCRAM-SHA-256");
 
     private static final Map<String, AuthenticationMechanism> AUTH_MAP = new HashMap<String, AuthenticationMechanism>();
     private final String mechanismName;

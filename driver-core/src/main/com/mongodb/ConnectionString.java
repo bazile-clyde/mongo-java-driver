@@ -778,8 +778,8 @@ public class ConnectionString {
             case SCRAM_SHA_256:
                 credential = MongoCredential.createScramSha256Credential(userName, mechanismAuthSource, password);
                 break;
-            case MONGODB_IAM:
-                credential = MongoCredential.createIamCredential(userName, password);
+            case MONGODB_AWS:
+                credential = MongoCredential.createAwsCredential(userName, password);
                 break;
             default:
                 throw new UnsupportedOperationException(format("The connection string contains an invalid authentication mechanism'. "

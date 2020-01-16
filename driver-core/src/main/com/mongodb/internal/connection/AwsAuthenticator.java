@@ -49,38 +49,38 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.mongodb.AuthenticationMechanism.MONGODB_IAM;
+import static com.mongodb.AuthenticationMechanism.MONGODB_AWS;
 import static java.lang.String.format;
 
-public class IamAuthenticator extends SaslAuthenticator {
-    private static final String MONGODB_IAM_MECHANISM_NAME = "MONGODB-IAM";
+public class AwsAuthenticator extends SaslAuthenticator {
+    private static final String MONGODB_AWS_MECHANISM_NAME = "MONGODB-AWS";
     private static final int RANDOM_LENGTH = 32;
 
-    public IamAuthenticator(final MongoCredentialWithCache credential) {
+    public AwsAuthenticator(final MongoCredentialWithCache credential) {
         super(credential);
 
-        if (getMongoCredential().getAuthenticationMechanism() != MONGODB_IAM) {
+        if (getMongoCredential().getAuthenticationMechanism() != MONGODB_AWS) {
             throw new MongoException("Incorrect mechanism: " + getMongoCredential().getMechanism());
         }
     }
 
     @Override
     public String getMechanismName() {
-        return MONGODB_IAM_MECHANISM_NAME;
+        return MONGODB_AWS_MECHANISM_NAME;
     }
 
     @Override
     protected SaslClient createSaslClient(final ServerAddress serverAddress) {
-        return new IamSaslClient(getMongoCredential());
+        return new AwsSaslClient(getMongoCredential());
     }
 
-    private static class IamSaslClient implements SaslClient {
+    private static class AwsSaslClient implements SaslClient {
         private final MongoCredential credential;
         private final byte[] clientNonce = new byte[RANDOM_LENGTH];
         private int step = -1;
         private String httpResponse;
 
-        IamSaslClient(final MongoCredential credential) {
+        AwsSaslClient(final MongoCredential credential) {
             this.credential = credential;
         }
 
@@ -193,7 +193,7 @@ public class IamAuthenticator extends SaslAuthenticator {
         @NonNull
         String getUserName() {
             String userName = credential.getUserName();
-            if (userName == null) {
+            if (userName == null && (userName = System.getenv("AWS_ACCESS_KEY_ID")) == null) {
                 userName = BsonDocument
                         .parse(getHttpResponse())
                         .getString("AccessKeyId")
@@ -206,11 +206,15 @@ public class IamAuthenticator extends SaslAuthenticator {
         private String getPassword() {
             char[] password = credential.getPassword();
             if (password == null) {
-                password = BsonDocument
-                        .parse(getHttpResponse())
-                        .getString("SecretAccessKey")
-                        .getValue()
-                        .toCharArray();
+                if (System.getenv("AWS_SECRET_ACCESS_KEY") != null) {
+                    password = System.getenv("AWS_SECRET_ACCESS_KEY").toCharArray();
+                } else {
+                    password = BsonDocument
+                            .parse(getHttpResponse())
+                            .getString("SecretAccessKey")
+                            .getValue()
+                            .toCharArray();
+                }
             }
             return new String(password);
         }
@@ -220,10 +224,12 @@ public class IamAuthenticator extends SaslAuthenticator {
             String token = credential.getMechanismProperty("AWS_SESSION_TOKEN", null);
             if (credential.getPassword() == null || credential.getUserName() == null) {
                 if (token == null) {
-                    token = BsonDocument
-                            .parse(getHttpResponse())
-                            .getString("Token")
-                            .getValue();
+                    if ((token = System.getenv("AWS_SESSION_TOKEN")) == null) {
+                        token = BsonDocument
+                                .parse(getHttpResponse())
+                                .getString("Token")
+                                .getValue();
+                    }
                 } else {
                     throw new IllegalArgumentException("The connection string contains auth properties and no username and password");
                 }

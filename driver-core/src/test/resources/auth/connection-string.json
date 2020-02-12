@@ -447,6 +447,63 @@
       "warning": false,
       "auth": null,
       "options": null
+    },
+    {
+      "description": "should recognise the mechanism (MONGODB-IAM)",
+      "uri": "mongodb://localhost/?authMechanism=MONGODB-IAM",
+      "hosts": null,
+      "valid": true,
+      "warning": false,
+      "auth": {
+        "username": null,
+        "password": null,
+        "db": "$external"
+      },
+      "options": {
+        "authmechanism": "MONGODB-IAM"
+      }
+    },
+    {
+      "description": "should throw an exception if username and no password (MONGODB-IAM)",
+      "uri": "mongodb://user@localhost/?authMechanism=MONGODB-IAM",
+      "hosts": null,
+      "valid": false,
+      "warning": false,
+      "auth": null,
+      "options": null
+    },
+    {
+      "description": "should use username and password if specified (MONGODB-IAM)",
+      "uri": "mongodb://user:password@localhost/?authMechanism=MONGODB-IAM",
+      "hosts": null,
+      "valid": true,
+      "warning": false,
+      "auth": {
+        "username": "user",
+        "password": "password",
+        "db": "$external"
+      },
+      "options": {
+        "authmechanism": "MONGODB-IAM"
+      }
+    },
+    {
+      "description": "should use username, password and session token if specified (MONGODB-IAM)",
+      "uri": "mongodb://user:password@localhost/?authMechanism=MONGODB-IAM&authMechanismProperties=AWS_SESSIONS_TOKEN:token",
+      "hosts": null,
+      "valid": true,
+      "warning": false,
+      "auth": {
+        "username": "user",
+        "password": "password",
+        "db": "$external"
+      },
+      "options": {
+        "authmechanism": "MONGODB-IAM",
+        "authmechanismproperties": {
+          "AWS_SESSION_TOKEN": "token"
+        }
+      }
     }
   ]
 }

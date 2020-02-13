@@ -193,11 +193,13 @@ public class AwsAuthenticator extends SaslAuthenticator {
         @NonNull
         String getUserName() {
             String userName = credential.getUserName();
-            if (userName == null && (userName = System.getenv("AWS_ACCESS_KEY_ID")) == null) {
-                userName = BsonDocument
-                        .parse(getHttpResponse())
-                        .getString("AccessKeyId")
-                        .getValue();
+            if (userName == null) {
+                if((userName = System.getenv("AWS_ACCESS_KEY_ID")) == null) {
+                    userName = BsonDocument
+                            .parse(getHttpResponse())
+                            .getString("AccessKeyId")
+                            .getValue();
+                }
             }
             return userName;
         }

@@ -275,6 +275,8 @@ public final class MongoCredential {
      * @param userName the user name
      * @param password the user password
      * @return the credential
+     * @since 4.1
+     * @mongodb.server.release 4.4
      * @see #createCredential(String, String, char[])
      */
     public static MongoCredential createAwsCredential(final String userName, final char[] password) {

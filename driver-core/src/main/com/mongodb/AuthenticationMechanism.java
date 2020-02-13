@@ -32,6 +32,8 @@ public enum AuthenticationMechanism {
 
     /**
      * The MONGODB-AWS mechanism.
+     * @since 4.1
+     * @mongodb.server.release 4.4
      */
     MONGODB_AWS("MONGODB-AWS"),
 

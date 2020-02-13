@@ -316,7 +316,7 @@ functions:
           }
           EOF
 
-  "run aws auth smoke test with regular aws credentials":
+  "configure regular aws credentials":
     - command: shell.exec
       type: test
       params:
@@ -340,9 +340,9 @@ functions:
           USER=$(urlencode ${iam_auth_ecs_account})
           PASS=$(urlencode ${iam_auth_ecs_secret_access_key})
 
-          JDK="jdk11" MONGODB_URI="mongodb://$USER:$PASS@localhost" .evergreen/run-mongodb-aws-test.sh
+          JDK=${JDK} MONGODB_URI="mongodb://$USER:$PASS@localhost" .evergreen/run-mongodb-aws-test.sh
 
-  "run aws auth smoke test with assume role credentials":
+  "configure assume role credentials":
     - command: shell.exec
       type: test
       params:
@@ -380,9 +380,9 @@ functions:
           SESSION_TOKEN=$(jq -r '.SessionToken' ${DRIVERS_TOOLS}/.evergreen/auth_aws/creds.json)
           SESSION_TOKEN=$(urlencode $SESSION_TOKEN)
 
-          JDK="jdk11" SESSION_TOKEN=$SESSION_TOKEN DRIVERS_TOOLS=${DRIVERS_TOOLS} MONGODB_URI="mongodb://$USER:$PASS@localhost" .evergreen/run-mongodb-aws-test.sh
+          JDK=${JDK} SESSION_TOKEN=$SESSION_TOKEN DRIVERS_TOOLS=${DRIVERS_TOOLS} MONGODB_URI="mongodb://$USER:$PASS@localhost" .evergreen/run-mongodb-aws-test.sh
 
-  "run aws auth smoke test with aws EC2 credentials":
+  "configure aws EC2 credentials":
     - command: shell.exec
       type: test
       params:
@@ -401,7 +401,7 @@ functions:
         silent: true
         script: |
           # DO NOT ECHO WITH XTRACE (which PREPARE_SHELL does)
-          JDK="jdk11" .evergreen/run-mongodb-aws-test.sh
+          JDK=${JDK} .evergreen/run-mongodb-aws-test.sh
 
   "run aws auth test with aws credentials as environment variables":
     - command: shell.exec
@@ -416,7 +416,7 @@ functions:
           export AWS_ACCESS_KEY_ID=$(urlencode ${iam_auth_ecs_account})
           export AWS_SECRET_ACCESS_KEY=$(urlencode ${iam_auth_ecs_secret_access_key})
 
-          JDK="jdk11" .evergreen/run-mongodb-aws-test.sh
+          JDK=${JDK} .evergreen/run-mongodb-aws-test.sh
 
   "run aws auth test with aws credentials and session token as environment variables":
     - command: shell.exec
@@ -439,7 +439,7 @@ functions:
           SESSION_TOKEN=$(jq -r '.SessionToken' ${DRIVERS_TOOLS}/.evergreen/auth_aws/creds.json)
           export AWS_SESSION_TOKEN=$(urlencode $SESSION_TOKEN)
 
-          JDK="jdk11" .evergreen/run-mongodb-aws-test.sh
+          JDK=${JDK} .evergreen/run-mongodb-aws-test.sh
 
   "run aws ECS auth test":
     - command: shell.exec
@@ -625,11 +625,11 @@ tasks:
             AWS: "aws"
             TOPOLOGY: "server"
         - func: "add aws auth variables to file"
-        - func: "run aws auth smoke test with regular aws credentials"
+        - func: "configure regular aws credentials"
         - func: "run aws auth test with regular aws credentials"
-        - func: "run aws auth smoke test with assume role credentials"
+        - func: "configure assume role credentials"
         - func: "run aws auth test with assume role credentials"
-        - func: "run aws auth smoke test with aws EC2 credentials"
+        - func: "configure aws EC2 credentials"
         - func: "run aws auth test with aws EC2 credentials"
         - func: "run aws auth test with aws credentials as environment variables"
         - func: "run aws auth test with aws credentials and session token as environment variables"
@@ -928,7 +928,8 @@ buildvariants:
   tasks:
     - name: "plain-auth-test"
 
-- name: aws-auth-test
+- matrix_name: "aws-auth-test"
+  matrix_spec: { jdk: "jdk11" }
   display_name: "MONGODB-AWS Auth test"
   run_on: ubuntu1804-test
   tasks:

@@ -20,7 +20,7 @@ echo "Running MONGODB-AWS authentication tests"
 
 export JAVA_HOME="/opt/java/${JDK}"
 
-MONGODB_URI="${MONGODB_URI}/aws?authMechanism=MONGODB-AWS&authSource=\$external"
+MONGODB_URI="${MONGODB_URI}/aws?authMechanism=MONGODB-AWS"
 if [[ -n ${SESSION_TOKEN} ]]; then
     MONGODB_URI="${MONGODB_URI}&authMechanismProperties=AWS_SESSION_TOKEN:${SESSION_TOKEN}"
 fi

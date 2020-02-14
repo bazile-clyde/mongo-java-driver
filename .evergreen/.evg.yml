@@ -622,7 +622,7 @@ tasks:
         - func: "bootstrap mongo-orchestration"
           vars:
             AUTH: "auth"
-            ORCHESTRATION_FILE: "auth-aws"
+            ORCHESTRATION_FILE: "auth-aws.json"
             TOPOLOGY: "server"
         - func: "add aws auth variables to file"
         - func: "configure regular aws credentials"
@@ -633,7 +633,7 @@ tasks:
         - func: "run aws auth test with aws EC2 credentials"
         - func: "run aws auth test with aws credentials as environment variables"
         - func: "run aws auth test with aws credentials and session token as environment variables"
-        # - func: "run aws ECS auth test"
+        - func: "run aws ECS auth test"
 
     - name: "gssapi-auth-test"
       commands:

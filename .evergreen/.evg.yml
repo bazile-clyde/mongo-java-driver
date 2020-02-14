@@ -218,7 +218,7 @@ functions:
       params:
         script: |
           ${PREPARE_SHELL}
-          MONGODB_VERSION=${VERSION} TOPOLOGY=${TOPOLOGY} AUTH=${AUTH} SSL=${SSL} STORAGE_ENGINE=${STORAGE_ENGINE} AWS=${AWS} sh ${DRIVERS_TOOLS}/.evergreen/run-orchestration.sh
+          MONGODB_VERSION=${VERSION} TOPOLOGY=${TOPOLOGY} AUTH=${AUTH} SSL=${SSL} STORAGE_ENGINE=${STORAGE_ENGINE} ORCHESTRATION_FILE=${ORCHESTRATION_FILE} sh ${DRIVERS_TOOLS}/.evergreen/run-orchestration.sh
     # run-orchestration generates expansion file with the MONGODB_URI for the cluster
     - command: expansions.update
       params:
@@ -324,7 +324,7 @@ functions:
         script: |
           ${PREPARE_SHELL}
           cd ${DRIVERS_TOOLS}/.evergreen/auth_aws
-          ${MONGODB_BINARIES}/mongo --verbose aws_e2e_regular_aws.js
+          ${MONGODB_BINARIES}/mongo aws_e2e_regular_aws.js
           cd -
 
   "run aws auth test with regular aws credentials":
@@ -355,7 +355,7 @@ functions:
           export MONGODB_BINARIES="$MONGODB_BINARIES"
 
           cd ${DRIVERS_TOOLS}/.evergreen/auth_aws
-          ${MONGODB_BINARIES}/mongo --verbose aws_e2e_assume_role.js
+          ${MONGODB_BINARIES}/mongo aws_e2e_assume_role.js
           cd -
 
   "run aws auth test with assume role credentials":
@@ -390,7 +390,7 @@ functions:
         script: |
           ${PREPARE_SHELL}
           cd ${DRIVERS_TOOLS}/.evergreen/auth_aws
-          ${MONGODB_BINARIES}/mongo --verbose aws_e2e_ec2.js
+          ${MONGODB_BINARIES}/mongo aws_e2e_ec2.js
           cd -
 
   "run aws auth test with aws EC2 credentials":
@@ -622,7 +622,7 @@ tasks:
         - func: "bootstrap mongo-orchestration"
           vars:
             AUTH: "auth"
-            AWS: "aws"
+            ORCHESTRATION_FILE: "auth-aws.json"
             TOPOLOGY: "server"
         - func: "add aws auth variables to file"
         - func: "configure regular aws credentials"
@@ -633,7 +633,7 @@ tasks:
         - func: "run aws auth test with aws EC2 credentials"
         - func: "run aws auth test with aws credentials as environment variables"
         - func: "run aws auth test with aws credentials and session token as environment variables"
-        # - func: "run aws ECS auth test"
+        - func: "run aws ECS auth test"
 
     - name: "gssapi-auth-test"
       commands:

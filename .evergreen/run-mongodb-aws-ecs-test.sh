@@ -13,6 +13,12 @@ set -o errexit  # Exit the script with error if any of the commands fail
 #            Main Program                  #
 ############################################
 
+if [[ -z "$1" ]]; then
+    echo "usage: $0 <MONGODB_URI>"
+    exit 1
+fi
+MONGODB_URI="$1"
+
 echo "Running MONGODB-AWS ECS authentication tests"
 
 if ! which java ; then
@@ -25,12 +31,9 @@ if ! which git ; then
     apt install git -y
 fi
 
-MONGODB_URI="mongodb://127.0.0.1:20000/aws?authMechanism=MONGODB-AWS&authSource=\$external"
-
-echo "checking version..."
 cd src
 ./gradlew -version
 
-echo "Running tests"
+echo "Running tests..."
 ./gradlew -Dorg.mongodb.test.uri=${MONGODB_URI} --stacktrace --debug --info driver-core:test --tests AwsAuthenticationSpecification
 cd -

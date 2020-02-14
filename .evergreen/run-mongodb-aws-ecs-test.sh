@@ -25,7 +25,7 @@ if ! which git ; then
     apt install git -y
 fi
 
-MONGODB_URI="mongodb://localhost/aws?authMechanism=MONGODB-AWS&authSource=\$external"
+MONGODB_URI="mongodb://127.0.0.1:20000/aws?authMechanism=MONGODB-AWS&authSource=\$external"
 
 echo "checking version..."
 cd src

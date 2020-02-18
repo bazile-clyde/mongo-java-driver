@@ -94,7 +94,7 @@ functions:
             # If this was a patch build, doing a fresh clone would not actually test the patch
             cp -R ${PROJECT_DIRECTORY}/ $DRIVERS_TOOLS
           else
-            git clone git://github.com/bazile-clyde/drivers-evergreen-tools.git $DRIVERS_TOOLS
+            git clone git://github.com/mongodb-labs/drivers-evergreen-tools.git $DRIVERS_TOOLS
           fi
           echo "{ \"releases\": { \"default\": \"$MONGODB_BINARIES\" }}" > $MONGO_ORCHESTRATION_HOME/orchestration.config
 
@@ -423,9 +423,10 @@ functions:
       type: test
       params:
         working_dir: "src"
-        silent: true
         script: |
           # DO NOT ECHO WITH XTRACE (which PREPARE_SHELL does)
+          # Disable xtrace (just in case it was accidentally set).
+          set +x
           export DRIVERS_TOOLS="$DRIVERS_TOOLS"
 
           alias urlencode='python -c "import sys, urllib as ul; print ul.quote_plus(sys.argv[1])"'

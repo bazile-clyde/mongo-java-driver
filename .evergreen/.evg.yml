@@ -629,10 +629,10 @@ tasks:
         - func: "run aws auth test with regular aws credentials"
         - func: "configure assume role credentials"
         - func: "run aws auth test with assume role credentials"
-        - func: "configure aws EC2 credentials"
-        - func: "run aws auth test with aws EC2 credentials"
         - func: "run aws auth test with aws credentials as environment variables"
         - func: "run aws auth test with aws credentials and session token as environment variables"
+        - func: "configure aws EC2 credentials"
+        - func: "run aws auth test with aws EC2 credentials"
         - func: "run aws ECS auth test"
 
     - name: "gssapi-auth-test"

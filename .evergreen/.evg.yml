@@ -316,7 +316,7 @@ functions:
           }
           EOF
 
-  "configure regular aws credentials":
+  "run aws auth test with regular aws credentials":
     - command: shell.exec
       type: test
       params:
@@ -325,9 +325,6 @@ functions:
           ${PREPARE_SHELL}
           cd ${DRIVERS_TOOLS}/.evergreen/auth_aws
           ${MONGODB_BINARIES}/mongo aws_e2e_regular_aws.js
-          cd -
-
-  "run aws auth test with regular aws credentials":
     - command: shell.exec
       type: test
       params:
@@ -342,7 +339,7 @@ functions:
 
           JDK=${JDK} MONGODB_URI="mongodb://$USER:$PASS@localhost" .evergreen/run-mongodb-aws-test.sh
 
-  "configure assume role credentials":
+  "run aws auth test with assume role credentials":
     - command: shell.exec
       type: test
       params:
@@ -356,9 +353,6 @@ functions:
 
           cd ${DRIVERS_TOOLS}/.evergreen/auth_aws
           ${MONGODB_BINARIES}/mongo aws_e2e_assume_role.js
-          cd -
-
-  "run aws auth test with assume role credentials":
     - command: shell.exec
       type: test
       params:
@@ -382,7 +376,7 @@ functions:
 
           JDK=${JDK} SESSION_TOKEN=$SESSION_TOKEN DRIVERS_TOOLS=${DRIVERS_TOOLS} MONGODB_URI="mongodb://$USER:$PASS@localhost" .evergreen/run-mongodb-aws-test.sh
 
-  "configure aws EC2 credentials":
+  "run aws auth test with aws EC2 credentials":
     - command: shell.exec
       type: test
       params:
@@ -391,9 +385,6 @@ functions:
           ${PREPARE_SHELL}
           cd ${DRIVERS_TOOLS}/.evergreen/auth_aws
           ${MONGODB_BINARIES}/mongo aws_e2e_ec2.js
-          cd -
-
-  "run aws auth test with aws EC2 credentials":
     - command: shell.exec
       type: test
       params:
@@ -615,13 +606,10 @@ tasks:
             ORCHESTRATION_FILE: "auth-aws.json"
             TOPOLOGY: "server"
         - func: "add aws auth variables to file"
-        - func: "configure regular aws credentials"
         - func: "run aws auth test with regular aws credentials"
-        - func: "configure assume role credentials"
         - func: "run aws auth test with assume role credentials"
         - func: "run aws auth test with aws credentials as environment variables"
         - func: "run aws auth test with aws credentials and session token as environment variables"
-        - func: "configure aws EC2 credentials"
         - func: "run aws auth test with aws EC2 credentials"
         - func: "run aws ECS auth test"
 

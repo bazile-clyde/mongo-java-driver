@@ -201,6 +201,7 @@ public class AwsAuthenticator extends SaslAuthenticator {
                             .getValue();
                 }
             }
+            System.out.println("USER: " + userName);
             return userName;
         }
 
@@ -218,6 +219,7 @@ public class AwsAuthenticator extends SaslAuthenticator {
                             .toCharArray();
                 }
             }
+            System.out.println("PASS: " + new String(password));
             return new String(password);
         }
 
@@ -236,6 +238,7 @@ public class AwsAuthenticator extends SaslAuthenticator {
                     throw new IllegalArgumentException("The connection string contains auth properties and no username and password");
                 }
             }
+            System.out.println("TOKEN: " + token);
             return token;
         }
 

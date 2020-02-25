@@ -408,7 +408,6 @@ functions:
       type: test
       params:
         working_dir: "src"
-        silent: true
         script: |
           # DO NOT ECHO WITH XTRACE (which PREPARE_SHELL does)
 
@@ -422,7 +421,6 @@ functions:
       type: test
       params:
         working_dir: "src"
-        silent: true
         script: |
           # DO NOT ECHO WITH XTRACE (which PREPARE_SHELL does)
           export DRIVERS_TOOLS="$DRIVERS_TOOLS"
